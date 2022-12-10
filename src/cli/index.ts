@@ -4,14 +4,15 @@ import { PROJEN_RC, PROJEN_VERSION } from "../common";
 import * as logging from "../logging";
 import { TaskRuntime } from "../task-runtime";
 import { getNodeMajorVersion } from "../util";
+import newCommand from "./cmds/new";
+
 import { synth } from "./synth";
 import { discoverTaskCommands } from "./tasks";
-
 const DEFAULT_RC = resolve(PROJEN_RC);
 
 async function main() {
   const ya = yargs;
-  ya.commandDir("cmds");
+  ya.command(newCommand);
 
   const runtime = new TaskRuntime(".");
   discoverTaskCommands(runtime, ya);
