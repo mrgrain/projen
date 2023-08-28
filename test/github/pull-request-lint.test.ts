@@ -117,6 +117,33 @@ describe("contributor statement", () => {
       contributorStatement
     );
   });
+
+  test("can exempt users and labels", () => {
+    // GIVEN
+    const project = createProject();
+    const contributorStatement = "Lorem ipsum dolor sit amet";
+
+    // WHEN
+    new PullRequestLint(project.github!, {
+      contributorStatement,
+      contributorStatementOptions: {
+        exemptLabels: ["automation"],
+        exemptUsers: ["github-bot[bot]"],
+      },
+    });
+
+    // THEN
+    const snapshot = synthSnapshot(project);
+    expect(
+      snapshot[".github/workflows/pull-request-lint.yml"]
+    ).toMatchSnapshot();
+    expect(snapshot[".github/workflows/pull-request-lint.yml"]).toContain(
+      'github.event.pull_request.user.login == "github-bot[bot]'
+    );
+    expect(snapshot[".github/workflows/pull-request-lint.yml"]).toContain(
+      'contains(github.event.pull_request.labels.*.name, "automation")'
+    );
+  });
 });
 
 test("with custom runner", () => {

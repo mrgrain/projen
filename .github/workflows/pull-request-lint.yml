@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-    if: '!((github.event.pull_request.user.login == "cdklabs-automation" || github.event.pull_request.user.login == "dependabot[bot]"))'
+    if: '!(github.event.pull_request.user.login == "cdklabs-automation" || github.event.pull_request.user.login == "dependabot[bot]")'
     steps:
       - if: '!contains(toJson(github.event.pull_request.body), "By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.\ntest\n\ntest")'
         run: |-

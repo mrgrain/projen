@@ -143,28 +143,12 @@ export class PullRequestLint extends Component {
       const users = opts.exemptUsers ?? [];
       const labels = opts.exemptLabels ?? [];
 
-      const conditions: string[] = [];
-      if (labels.length > 0) {
-        conditions.push(
-          "(" +
-            labels
-              .map(
-                (l) =>
-                  `contains(github.event.pull_request.labels.*.name, "${l}")`
-              )
-              .join(" || ") +
-            ")"
-        );
-      }
-      if (users.length > 0) {
-        conditions.push(
-          "(" +
-            users
-              .map((u) => `github.event.pull_request.user.login == "${u}"`)
-              .join(" || ") +
-            ")"
-        );
-      }
+      const conditions: string[] = [
+        ...labels.map(
+          (l) => `contains(github.event.pull_request.labels.*.name, "${l}")`
+        ),
+        ...users.map((u) => `github.event.pull_request.user.login == "${u}"`),
+      ];
 
       const contributorStatement: Job = {
         name: "Require Contributor Statement",
@@ -172,7 +156,7 @@ export class PullRequestLint extends Component {
         permissions: {
           pullRequests: JobPermission.WRITE,
         },
-        if: conditions.length ? `!(${conditions.join(" && ")})` : undefined,
+        if: conditions.length ? `!(${conditions.join(" || ")})` : undefined,
         steps: [
           {
             if: `!contains(toJson(github.event.pull_request.body), "${options.contributorStatement.replace(
