@@ -151,6 +151,15 @@ export class PullRequestLint extends Component {
         ...users.map((u) => `github.event.pull_request.user.login == '${u}'`),
       ];
 
+      // let core: any;
+      // const script = () => {
+      //   if (!process.env.PR_BODY!.includes(process.env.EXPECTED_STATEMENT!)) {
+      //     core.setFailed(
+      //       `${process.env.ERROR_MSG}: ${process.env.EXPECTED_STATEMENT}`
+      //     );
+      //   }
+      // };
+
       const errorMessage =
         "Contributor statement missing from PR description. Please include the following text in your PR description:";
       const contributorStatement: Job = {
@@ -167,7 +176,16 @@ export class PullRequestLint extends Component {
         },
         steps: [
           {
-            run: 'grep -q "$EXPECTED_STATEMENT" <<< "$PR_BODY" || echo "::error ::$ERROR_MSG $EXPECTED_STATEMENT" && exit 1',
+            uses: "actions/github-script@v6",
+            with: {
+              // script: script.toString(),
+              script: [
+                "if (!process.env.PR_BODY.includes(process.env.EXPECTED_STATEMENT)) {",
+                "  core.setFailed(`${process.env.ERROR_MSG}: ${process.env.EXPECTED_STATEMENT}`);",
+                "}",
+              ].join("\n"),
+            },
+            // run: 'grep -q "$EXPECTED_STATEMENT" <<< "$PR_BODY" || echo "::error ::$ERROR_MSG $EXPECTED_STATEMENT" && exit 1',
           },
         ],
       };
