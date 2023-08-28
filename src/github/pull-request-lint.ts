@@ -99,7 +99,7 @@ export class PullRequestLint extends Component {
 
     const workflow = github.addWorkflow("pull-request-lint");
     workflow.on({
-      pullRequestTarget: {
+      pullRequest: {
         types: [
           "labeled",
           "opened",
