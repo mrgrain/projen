@@ -161,7 +161,7 @@ export class PullRequestLint extends Component {
       // };
 
       const errorMessage =
-        "Contributor statement missing from PR description. Please include the following text in your PR description:";
+        "Contributor statement missing from PR description. Please include the following text in your PR description";
       const contributorStatement: Job = {
         name: "Require Contributor Statement",
         runsOn: options.runsOn ?? ["ubuntu-latest"],
@@ -181,7 +181,7 @@ export class PullRequestLint extends Component {
               // script: script.toString(),
               script: [
                 "if (!process.env.PR_BODY.includes(process.env.EXPECTED_STATEMENT)) {",
-                "  core.setFailed(`${process.env.ERROR_MSG}: ${process.env.EXPECTED_STATEMENT}`);",
+                '  core.setFailed(`${process.env.ERROR_MSG}: "${process.env.EXPECTED_STATEMENT}"`);',
                 "}",
               ].join("\n"),
             },

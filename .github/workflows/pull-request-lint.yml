@@ -39,12 +39,12 @@ jobs:
         test
 
         test
-      ERROR_MSG: "Contributor statement missing from PR description. Please include the following text in your PR description:"
+      ERROR_MSG: Contributor statement missing from PR description. Please include the following text in your PR description
     if: "!(contains(github.event.pull_request.labels.*.name, 'automation') || github.event.pull_request.user.login == 'cdklabs-automation' || github.event.pull_request.user.login == 'dependabot[bot]')"
     steps:
       - uses: actions/github-script@v6
         with:
           script: |-
             if (!process.env.PR_BODY.includes(process.env.EXPECTED_STATEMENT)) {
-              core.setFailed(`${process.env.ERROR_MSG}: ${process.env.EXPECTED_STATEMENT}`);
+              core.setFailed(`${process.env.ERROR_MSG}: "${process.env.EXPECTED_STATEMENT}"`);
             }
