@@ -151,14 +151,18 @@ export class PullRequestLint extends Component {
         ...users.map((u) => `github.event.pull_request.user.login == '${u}'`),
       ];
 
-      // let core: any;
-      // const script = () => {
-      //   if (!process.env.PR_BODY!.includes(process.env.EXPECTED_STATEMENT!)) {
-      //     core.setFailed(
-      //       `${process.env.ERROR_MSG}: ${process.env.EXPECTED_STATEMENT}`
-      //     );
-      //   }
-      // };
+      const script = (core: any) => {
+        const actual = process.env.PR_BODY!.replace(/\r?\n/g, "\n");
+        const expected = process.env.EXPECTED_STATEMENT!.replace(
+          /\r?\n/g,
+          "\n"
+        );
+        console.log("%j", actual);
+        console.log("%j", expected);
+        if (!actual.includes(expected)) {
+          core.setFailed(`${process.env.ERROR_MSG}: ${process.env.expected}`);
+        }
+      };
 
       const errorMessage =
         "Contributor statement missing from PR description. Please include the following text in the PR description";
@@ -180,8 +184,10 @@ export class PullRequestLint extends Component {
             with: {
               // script: script.toString(),
               script: [
-                "if (!process.env.PR_BODY.includes(process.env.EXPECTED_STATEMENT)) {",
-                "  console.log(JSON.stringify(process.env.PR_BODY), JSON.stringify(process.env.EXPECTED_STATEMENT));",
+                'const body = process.env.PR_BODY.replace(/\\r?\\n/g, "\\n");',
+                'const expected = process.env.EXPECTED_STATEMENT.replace(/\\r?\\n/g, "\\n");',
+                "if (!body.includes(expected)) {",
+                "  console.log(JSON.stringify(body), JSON.stringify(expected));",
                 '  core.setFailed(`${process.env.ERROR_MSG}: "${process.env.EXPECTED_STATEMENT}"`);',
                 "}",
               ].join("\n"),
