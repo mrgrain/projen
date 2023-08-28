@@ -28,8 +28,9 @@ export interface PullRequestLintOptions {
 
   /**
    * Require a contributor statement to be included in the PR description.
-   *
    * For example confirming that the contribution has been made by the contributor and complies with the project's license.
+   *
+   * Appends the statement to the end of the Pull Request template.
    *
    * @default - no contributor statement is required
    */
