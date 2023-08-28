@@ -20,10 +20,17 @@ const project = new cdk.JsiiProject({
     "cdk",
   ],
 
-  pullRequestTemplateContents: [
-    "---",
-    "By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.",
-  ],
+  pullRequestTemplateContents: [""],
+
+  githubOptions: {
+    pullRequestLintOptions: {
+      contributorStatement:
+        "By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.\ntest\n\ntest",
+      contributorStatementOptions: {
+        exemptUsers: ["cdklabs-automation", "dependabot[bot]"],
+      },
+    },
+  },
 
   jsiiVersion: "5.1.x",
   typescriptVersion: "5.1.x",

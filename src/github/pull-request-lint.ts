@@ -1,4 +1,4 @@
-import { GitHub } from ".";
+import { GitHub, PullRequestTemplate } from ".";
 import { Job, JobPermission } from "./workflows-model";
 import { Component } from "../component";
 
@@ -25,6 +25,21 @@ export interface PullRequestLintOptions {
    * @default ["ubuntu-latest"]
    */
   readonly runsOn?: string[];
+
+  /**
+   * Require a contributor statement to be included in the PR description.
+   *
+   * For example confirming that the contribution has been made by the contributor and complies with the project's license.
+   *
+   * @default - no contributor statement is required
+   */
+  readonly contributorStatement?: string;
+
+  /**
+   * Options for requiring a contributor statement on Pull Requests
+   * @default - none
+   */
+  readonly contributorStatementOptions?: ContributorStatementOptions;
 }
 
 /**
@@ -47,15 +62,55 @@ export interface SemanticTitleOptions {
 }
 
 /**
+ * Options for requiring a contributor statement on Pull Requests
+ */
+export interface ContributorStatementOptions {
+  /**
+   * Pull requests from these GitHub users are exempted from a contributor statement.
+   * @default - no users are exempted
+   */
+  readonly exemptUsers?: string[];
+  /**
+   * Pull requests with one of these labels are exempted from a contributor statement.
+   * @default - no labels are excluded
+   */
+  readonly exemptLabels?: string[];
+}
+
+/**
  * Configure validations to run on GitHub pull requests.
  * Only generates a file if at least one linter is configured.
  */
 export class PullRequestLint extends Component {
-  constructor(github: GitHub, options: PullRequestLintOptions = {}) {
+  constructor(
+    private readonly github: GitHub,
+    private readonly options: PullRequestLintOptions = {}
+  ) {
     super(github.project);
 
+    const checkSemanticTitle = options.semanticTitle ?? true;
+    const checkContributorStatement = Boolean(options.contributorStatement);
+
     // should only create a workflow if one or more linters are enabled
-    if (options.semanticTitle ?? true) {
+    if (!checkSemanticTitle && !checkContributorStatement) {
+      return;
+    }
+
+    const workflow = github.addWorkflow("pull-request-lint");
+    workflow.on({
+      pullRequestTarget: {
+        types: [
+          "labeled",
+          "opened",
+          "synchronize",
+          "reopened",
+          "ready_for_review",
+          "edited",
+        ],
+      },
+    });
+
+    if (checkSemanticTitle) {
       const opts = options.semanticTitleOptions ?? {};
       const types = opts.types ?? ["feat", "fix", "chore"];
 
@@ -80,20 +135,69 @@ export class PullRequestLint extends Component {
         ],
       };
 
-      const workflow = github.addWorkflow("pull-request-lint");
-      workflow.on({
-        pullRequestTarget: {
-          types: [
-            "labeled",
-            "opened",
-            "synchronize",
-            "reopened",
-            "ready_for_review",
-            "edited",
-          ],
-        },
-      });
       workflow.addJobs({ validate: validateJob });
+    }
+
+    if (options.contributorStatement) {
+      const opts = options.contributorStatementOptions ?? {};
+      const users = opts.exemptUsers ?? [];
+      const labels = opts.exemptLabels ?? [];
+
+      const conditions: string[] = [];
+      if (labels.length > 0) {
+        conditions.push(
+          "(" +
+            labels
+              .map(
+                (l) =>
+                  `contains(github.event.pull_request.labels.*.name, "${l}")`
+              )
+              .join(" || ") +
+            ")"
+        );
+      }
+      if (users.length > 0) {
+        conditions.push(
+          "(" +
+            users
+              .map((u) => `github.event.pull_request.user.login == "${u}"`)
+              .join(" || ") +
+            ")"
+        );
+      }
+
+      const contributorStatement: Job = {
+        name: "Require Contributor Statement",
+        runsOn: options.runsOn ?? ["ubuntu-latest"],
+        permissions: {
+          pullRequests: JobPermission.WRITE,
+        },
+        if: conditions.length ? `!(${conditions.join(" && ")})` : undefined,
+        steps: [
+          {
+            if: `!contains(toJson(github.event.pull_request.body), "${options.contributorStatement.replace(
+              /\r?\n/gm,
+              "\\n"
+            )}")`,
+            run: [
+              `echo "::error ::Contributor statement missing from PR description. Please include the following text in your PR description: ${options.contributorStatement}"`,
+            ].join("\n"),
+          },
+        ],
+      };
+
+      workflow.addJobs({ contributorStatement });
+    }
+  }
+
+  public preSynthesize(): void {
+    if (this.options.contributorStatement) {
+      // Append to PR template in preSynthesize so it's at the end of the file
+      const prTemplate =
+        PullRequestTemplate.of(this.project) ??
+        this.github.addPullRequestTemplate();
+      prTemplate?.addLine("---");
+      prTemplate?.addLine(this.options.contributorStatement);
     }
   }
 }
