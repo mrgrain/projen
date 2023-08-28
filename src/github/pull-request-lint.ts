@@ -146,9 +146,9 @@ export class PullRequestLint extends Component {
 
       const conditions: string[] = [
         ...labels.map(
-          (l) => `contains(github.event.pull_request.labels.*.name, "${l}")`
+          (l) => `contains(github.event.pull_request.labels.*.name, '${l}')`
         ),
-        ...users.map((u) => `github.event.pull_request.user.login == "${u}"`),
+        ...users.map((u) => `github.event.pull_request.user.login == '${u}'`),
       ];
 
       const contributorStatement: Job = {
