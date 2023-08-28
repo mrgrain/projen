@@ -181,6 +181,7 @@ export class PullRequestLint extends Component {
               // script: script.toString(),
               script: [
                 "if (!process.env.PR_BODY.includes(process.env.EXPECTED_STATEMENT)) {",
+                "  console.log(JSON.stringify(process.env.PR_BODY), JSON.stringify(process.env.EXPECTED_STATEMENT));",
                 '  core.setFailed(`${process.env.ERROR_MSG}: "${process.env.EXPECTED_STATEMENT}"`);',
                 "}",
               ].join("\n"),
