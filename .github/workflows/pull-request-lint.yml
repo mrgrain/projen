@@ -34,12 +34,8 @@ jobs:
       pull-requests: write
     env:
       PR_BODY: ${{ github.event.pull_request.body }}
-      EXPECTED_STATEMENT: |-
-        By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.
-        test
-
-        test
-      ERROR_MSG: Contributor statement missing from PR description. Please include the following text in your PR description
+      EXPECTED_STATEMENT: By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.
+      ERROR_MSG: Contributor statement missing from PR description. Please include the following text in the PR description
     if: "!(contains(github.event.pull_request.labels.*.name, 'automation') || github.event.pull_request.user.login == 'cdklabs-automation' || github.event.pull_request.user.login == 'dependabot[bot]')"
     steps:
       - uses: actions/github-script@v6

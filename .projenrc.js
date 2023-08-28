@@ -23,7 +23,7 @@ const project = new cdk.JsiiProject({
   githubOptions: {
     pullRequestLintOptions: {
       contributorStatement:
-        "By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.\ntest\n\ntest",
+        "By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.",
       contributorStatementOptions: {
         exemptUsers: ["cdklabs-automation", "dependabot[bot]"],
         exemptLabels: ["automation"],

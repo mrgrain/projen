@@ -161,7 +161,7 @@ export class PullRequestLint extends Component {
       // };
 
       const errorMessage =
-        "Contributor statement missing from PR description. Please include the following text in your PR description";
+        "Contributor statement missing from PR description. Please include the following text in the PR description";
       const contributorStatement: Job = {
         name: "Require Contributor Statement",
         runsOn: options.runsOn ?? ["ubuntu-latest"],
