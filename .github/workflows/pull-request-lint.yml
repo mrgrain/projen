@@ -34,21 +34,21 @@ jobs:
       pull-requests: write
     env:
       PR_BODY: ${{ github.event.pull_request.body }}
-      EXPECTED_STATEMENT: |-
+      EXPECTED: |-
         By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.
         test
 
         test
-      ERROR_MSG: Contributor statement missing from PR description. Please include the following text in the PR description
+      HELP: Contributor statement missing from PR description. Please include the following text in the PR description
     if: "!(contains(github.event.pull_request.labels.*.name, 'automation') || github.event.pull_request.user.login == 'cdklabs-automation' || github.event.pull_request.user.login == 'dependabot[bot]')"
     steps:
       - uses: actions/github-script@v6
         with:
           script: |-
             const actual = process.env.PR_BODY.replace(/\r?\n/g, "\n");
-            const expected = process.env.EXPECTED_STATEMENT.replace(/\r?\n/g, "\n");
-            console.log("%j", actual);
-            console.log("%j", expected);
+            const expected = process.env.EXPECTED.replace(/\r?\n/g, "\n");
             if (!actual.includes(expected)) {
-                core.setFailed(`${process.env.ERROR_MSG}: ${process.env.expected}`);
+                console.log("%j", actual);
+                console.log("%j", expected);
+                core.setFailed(`${process.env.HELP}: ${process.env.expected}`);
             }

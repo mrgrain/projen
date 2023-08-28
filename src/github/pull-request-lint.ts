@@ -153,18 +153,15 @@ export class PullRequestLint extends Component {
 
       const script = (core: any) => {
         const actual = process.env.PR_BODY!.replace(/\r?\n/g, "\n");
-        const expected = process.env.EXPECTED_STATEMENT!.replace(
-          /\r?\n/g,
-          "\n"
-        );
-        console.log("%j", actual);
-        console.log("%j", expected);
+        const expected = process.env.EXPECTED!.replace(/\r?\n/g, "\n");
         if (!actual.includes(expected)) {
-          core.setFailed(`${process.env.ERROR_MSG}: ${process.env.expected}`);
+          console.log("%j", actual);
+          console.log("%j", expected);
+          core.setFailed(`${process.env.HELP}: ${process.env.expected}`);
         }
       };
 
-      const errorMessage =
+      const helpMessage =
         "Contributor statement missing from PR description. Please include the following text in the PR description";
       const contributorStatement: Job = {
         name: "Require Contributor Statement",
@@ -175,24 +172,24 @@ export class PullRequestLint extends Component {
         if: conditions.length ? `!(${conditions.join(" || ")})` : undefined,
         env: {
           PR_BODY: "${{ github.event.pull_request.body }}",
-          EXPECTED_STATEMENT: options.contributorStatement,
-          ERROR_MSG: errorMessage,
+          EXPECTED: options.contributorStatement,
+          HELP: helpMessage,
         },
         steps: [
           {
             uses: "actions/github-script@v6",
             with: {
-              script: functionBody(script),
+              script: fnBody(script),
               // script: [
               //   'const body = process.env.PR_BODY.replace(/\\r?\\n/g, "\\n");',
-              //   'const expected = process.env.EXPECTED_STATEMENT.replace(/\\r?\\n/g, "\\n");',
+              //   'const expected = process.env.EXPECTED.replace(/\\r?\\n/g, "\\n");',
               //   "if (!body.includes(expected)) {",
               //   "  console.log(JSON.stringify(body), JSON.stringify(expected));",
-              //   '  core.setFailed(`${process.env.ERROR_MSG}: "${process.env.EXPECTED_STATEMENT}"`);',
+              //   '  core.setFailed(`${process.env.HELP}: "${process.env.EXPECTED}"`);',
               //   "}",
               // ].join("\n"),
             },
-            // run: 'grep -q "$EXPECTED_STATEMENT" <<< "$PR_BODY" || echo "::error ::$ERROR_MSG $EXPECTED_STATEMENT" && exit 1',
+            // run: 'grep -q "$EXPECTED" <<< "$PR_BODY" || echo "::error ::$HELP $EXPECTED" && exit 1',
           },
         ],
       };
@@ -215,9 +212,19 @@ export class PullRequestLint extends Component {
   }
 }
 
-function functionBody(fn: any) {
-  const def = fn.toString();
-  const body = def.substring(def.indexOf("{") + 1, def.lastIndexOf("}"));
-  console.log(body);
-  return body.trim();
+function fnBody(fn: (...args: any[]) => any) {
+  const def = fn.toString().replace(/\r?\n/g, "\n");
+  const body = def
+    .substring(def.indexOf("{") + 1, def.lastIndexOf("}"))
+    .split("\n");
+  const minIndentation = Math.min(
+    ...body
+      .filter((l) => l.trim()) // ignore empty lines
+      .map((l) => l.search(/\S|$/))
+  );
+
+  return body
+    .map((l) => l.replace(" ".repeat(minIndentation), ""))
+    .join("\n")
+    .trim();
 }
