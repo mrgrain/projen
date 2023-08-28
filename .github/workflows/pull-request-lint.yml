@@ -31,7 +31,7 @@ jobs:
     name: Require Contributor Statement
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      pull-requests: read
     env:
       PR_BODY: ${{ github.event.pull_request.body }}
       EXPECTED: |-
