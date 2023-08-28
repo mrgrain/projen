@@ -182,15 +182,15 @@ export class PullRequestLint extends Component {
           {
             uses: "actions/github-script@v6",
             with: {
-              // script: script.toString(),
-              script: [
-                'const body = process.env.PR_BODY.replace(/\\r?\\n/g, "\\n");',
-                'const expected = process.env.EXPECTED_STATEMENT.replace(/\\r?\\n/g, "\\n");',
-                "if (!body.includes(expected)) {",
-                "  console.log(JSON.stringify(body), JSON.stringify(expected));",
-                '  core.setFailed(`${process.env.ERROR_MSG}: "${process.env.EXPECTED_STATEMENT}"`);',
-                "}",
-              ].join("\n"),
+              script: functionBody(script),
+              // script: [
+              //   'const body = process.env.PR_BODY.replace(/\\r?\\n/g, "\\n");',
+              //   'const expected = process.env.EXPECTED_STATEMENT.replace(/\\r?\\n/g, "\\n");',
+              //   "if (!body.includes(expected)) {",
+              //   "  console.log(JSON.stringify(body), JSON.stringify(expected));",
+              //   '  core.setFailed(`${process.env.ERROR_MSG}: "${process.env.EXPECTED_STATEMENT}"`);',
+              //   "}",
+              // ].join("\n"),
             },
             // run: 'grep -q "$EXPECTED_STATEMENT" <<< "$PR_BODY" || echo "::error ::$ERROR_MSG $EXPECTED_STATEMENT" && exit 1',
           },
@@ -213,4 +213,11 @@ export class PullRequestLint extends Component {
       prTemplate?.addLine("");
     }
   }
+}
+
+function functionBody(fn: any) {
+  const def = fn.toString();
+  const body = def.substring(def.indexOf("{") + 1, def.lastIndexOf("}"));
+  console.log(body);
+  return body.trim();
 }
