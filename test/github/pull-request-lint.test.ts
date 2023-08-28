@@ -12,7 +12,11 @@ test("default", () => {
   // THEN
   const snapshot = synthSnapshot(project);
   expect(snapshot[".github/workflows/pull-request-lint.yml"]).toBeDefined();
-  expect(snapshot[".github/workflows/pull-request-lint.yml"]).toMatchSnapshot();
+
+  const workflow = snapshot[".github/workflows/pull-request-lint.yml"];
+  expect(workflow).toMatchSnapshot();
+  expect(workflow).toContain("Validate PR title");
+  expect(workflow).not.toContain("Require Contributor Statement");
 });
 
 describe("semantic titles", () => {
@@ -52,6 +56,66 @@ describe("semantic titles", () => {
     expect(
       snapshot[".github/workflows/pull-request-lint.yml"]
     ).toMatchSnapshot();
+  });
+});
+
+describe("contributor statement", () => {
+  test("validates pull requests", () => {
+    // GIVEN
+    const project = createProject();
+
+    // WHEN
+    new PullRequestLint(project.github!, {
+      contributorStatement: "Lorem ipsum dolor sit amet",
+    });
+
+    // THEN
+    const snapshot = synthSnapshot(project);
+    expect(
+      snapshot[".github/workflows/pull-request-lint.yml"]
+    ).toMatchSnapshot();
+  });
+
+  test("creates pull request template", () => {
+    // GIVEN
+    const project = createProject({
+      pullRequestTemplate: false,
+    });
+    const contributorStatement = "Lorem ipsum dolor sit amet";
+
+    // WHEN
+    new PullRequestLint(project.github!, {
+      contributorStatement,
+    });
+
+    // THEN
+    const snapshot = synthSnapshot(project);
+    expect(snapshot[".github/pull_request_template.md"]).toMatchSnapshot();
+    expect(snapshot[".github/pull_request_template.md"]).toContain(
+      contributorStatement
+    );
+  });
+
+  test("appends to an existing request template", () => {
+    // GIVEN
+    const project = createProject({
+      pullRequestTemplate: true,
+      pullRequestTemplateContents: ["Foobar #"],
+    });
+    const contributorStatement = "Lorem ipsum dolor sit amet";
+
+    // WHEN
+    new PullRequestLint(project.github!, {
+      contributorStatement,
+    });
+
+    // THEN
+    const snapshot = synthSnapshot(project);
+    expect(snapshot[".github/pull_request_template.md"]).toMatchSnapshot();
+    expect(snapshot[".github/pull_request_template.md"]).toContain("Foobar #");
+    expect(snapshot[".github/pull_request_template.md"]).toContain(
+      contributorStatement
+    );
   });
 });
 
