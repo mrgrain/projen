@@ -181,8 +181,10 @@ export class PullRequestLint extends Component {
       const prTemplate =
         PullRequestTemplate.of(this.project) ??
         this.github.addPullRequestTemplate();
+      prTemplate?.addLine("");
       prTemplate?.addLine("---");
       prTemplate?.addLine(this.options.contributorStatement);
+      prTemplate?.addLine("");
     }
   }
 }

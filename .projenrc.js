@@ -20,8 +20,6 @@ const project = new cdk.JsiiProject({
     "cdk",
   ],
 
-  pullRequestTemplateContents: [""],
-
   githubOptions: {
     pullRequestLintOptions: {
       contributorStatement:
