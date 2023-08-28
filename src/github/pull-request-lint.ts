@@ -160,10 +160,10 @@ export class PullRequestLint extends Component {
         if: conditions.length ? `!(${conditions.join(" || ")})` : undefined,
         steps: [
           {
-            if: `!contains(toJson(github.event.pull_request.body), "${options.contributorStatement.replace(
+            if: `!contains(toJson(github.event.pull_request.body), '${options.contributorStatement.replace(
               /\r?\n/gm,
               "\\n"
-            )}")`,
+            )}')`,
             run: [
               `echo "::error ::Contributor statement missing from PR description. Please include the following text in your PR description: ${options.contributorStatement}"`,
             ].join("\n"),
