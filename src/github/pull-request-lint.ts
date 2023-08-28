@@ -151,6 +151,8 @@ export class PullRequestLint extends Component {
         ...users.map((u) => `github.event.pull_request.user.login == '${u}'`),
       ];
 
+      const errorMessage =
+        "Contributor statement missing from PR description. Please include the following text in your PR description:";
       const contributorStatement: Job = {
         name: "Require Contributor Statement",
         runsOn: options.runsOn ?? ["ubuntu-latest"],
@@ -158,15 +160,14 @@ export class PullRequestLint extends Component {
           pullRequests: JobPermission.WRITE,
         },
         if: conditions.length ? `!(${conditions.join(" || ")})` : undefined,
+        env: {
+          PR_BODY: "${{ github.event.pull_request.body }}",
+          EXPECTED_STATEMENT: options.contributorStatement,
+          ERROR_MSG: errorMessage,
+        },
         steps: [
           {
-            if: `!contains(toJson(github.event.pull_request.body), '${options.contributorStatement.replace(
-              /\r?\n/gm,
-              "\\n"
-            )}')`,
-            run: [
-              `echo "::error ::Contributor statement missing from PR description. Please include the following text in your PR description: ${options.contributorStatement}"`,
-            ].join("\n"),
+            run: 'grep -q "$EXPECTED_STATEMENT" <<< "$PR_BODY" || echo "::error ::$ERROR_MSG $EXPECTED_STATEMENT" && exit 1',
           },
         ],
       };

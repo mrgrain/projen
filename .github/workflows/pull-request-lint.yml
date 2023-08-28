@@ -32,11 +32,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+    env:
+      PR_BODY: ${{ github.event.pull_request.body }}
+      EXPECTED_STATEMENT: |-
+        By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.
+        test
+
+        test
+      ERROR_MSG: "Contributor statement missing from PR description. Please include the following text in your PR description:"
     if: "!(contains(github.event.pull_request.labels.*.name, 'automation') || github.event.pull_request.user.login == 'cdklabs-automation' || github.event.pull_request.user.login == 'dependabot[bot]')"
     steps:
-      - if: "!contains(toJson(github.event.pull_request.body), 'By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.\\ntest\\n\\ntest')"
-        run: |-
-          echo "::error ::Contributor statement missing from PR description. Please include the following text in your PR description: By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.
-          test
-
-          test"
+      - run: grep -q "$EXPECTED_STATEMENT" <<< "$PR_BODY" || echo "::error ::$ERROR_MSG $EXPECTED_STATEMENT" && exit 1
